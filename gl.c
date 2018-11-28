@@ -10,7 +10,7 @@ void gl_swap_buffer(void)
     fb_swap_buffer();
 }
 
-unsigned int gl_get_width(void)
+unsigned int gl_get_width(void) 
 {
     return fb_get_width();
 }
@@ -47,19 +47,14 @@ void gl_draw_pixel(int x, int y, color_t c)
 {
     int pitch = gl_get_pitch();
     unsigned (*im)[pitch / 4] = (unsigned (*)[pitch / 4])fb_get_draw_buffer();
-    if (x < gl_get_width() && y < gl_get_height()) {
-        im[y][x] = c;
-    }
+    im[y][x] = c;
 }
 
 color_t gl_read_pixel(int x, int y)
 {
     int pitch = gl_get_pitch();
     unsigned (*im)[pitch / 4] = (unsigned (*)[pitch / 4])fb_get_draw_buffer();
-    if (x < gl_get_width() && y < gl_get_height()) {
-        return im[y][x];
-    }
-    return 0;
+    return im[y][x];
 }
 
 void gl_draw_rect(int x, int y, int w, int h, color_t c)
@@ -117,3 +112,4 @@ unsigned int gl_get_char_width(void)
 {
     return font_get_width();
 }
+
