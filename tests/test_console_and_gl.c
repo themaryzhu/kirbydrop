@@ -10,10 +10,8 @@
 
 #define _WIDTH 600
 #define _HEIGHT 500
-
 #define _NROWS 20
 #define _NCOLS 30
-
 #define _BALLRADIUS 10
 
 // initialize window
@@ -57,32 +55,29 @@ void drawAllPlatforms() {
     }
 }
 
-//// move ball on display
-//void moveBall() {
-//    // draw ball frame by frame
-//    // clear and swap buffer each time
-//    int x_coord = _WIDTH/2;
-//    int y_coord = 0 + _BALLRADIUS;
-//    for (int i = 0; i < _HEIGHT; i++) {
-//        gl_draw_ball(x_coord, y_coord, _BALLRADIUS, GL_WHITE);
-//        y_coord++;
-////        gl_clear(gl_color(0xFF, 0xFF, 0xFF));
-//        gl_draw_ball(x_coord, y_coord, _BALLRADIUS, GL_BLUE);
-////        timer_delay(1);
-////        gl_swap_buffer();
-//    }
-//}
+// move ball on display
+void moveBall() {
+    // BUG: Will turn the platforms it moves over to white
+    // draw ball frame by frame
+    // swap buffer each time
+    int x_coord = _WIDTH/2;
+    int y_coord = 0 + _BALLRADIUS;
+    for (int i = 0; i < _HEIGHT-(2*_BALLRADIUS); i++) {
+        gl_draw_ball(x_coord, y_coord, _BALLRADIUS, GL_WHITE);
+        y_coord++;
+        gl_draw_ball(x_coord, y_coord, _BALLRADIUS, GL_BLUE);
+        gl_swap_buffer();
+        timer_delay_ms(300);
+        gl_swap_buffer();
+    }
+}
 
 // main program
 void main(void) {
     init_window();
-    
     drawBall();
-    drawAllPlatforms();
-    
-//    moveBall();
-    
-    //TODO: fix swap buffer mess
+    drawAllPlatforms(); 
+    moveBall();
     gl_swap_buffer();
 }
 
