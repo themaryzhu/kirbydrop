@@ -70,9 +70,9 @@ void gl_draw_rect(int x, int y, int w, int h, color_t c)
 
 // xLoc and yLoc are the center coordinates of the ball
 void gl_draw_ball(int xLoc, int yLoc, int radius, color_t c){
-    for(int y = -radius; y <= radius; y++) {
-        for(int x = -radius; x <= radius; x++) {
-            if(((x*x)+(y*y)) <= (radius*radius)) {
+    for (int y = -radius; y <= radius; y++) {
+        for (int x = -radius; x <= radius; x++) {
+            if (((x*x)+(y*y)) <= (radius * radius)) {
                 gl_draw_pixel(xLoc + x, yLoc + y, c);
             }
         }
