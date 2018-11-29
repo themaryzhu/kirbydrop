@@ -4,7 +4,7 @@
 #include "gl.h"
 #include "console.h"
 #include "printf.h"
-
+#include "math.h"
 // added libraries
 #include <stdlib.h>
 
@@ -57,20 +57,48 @@ void drawAllPlatforms() {
 
 // move ball on display
 void moveBall() {
-    // BUG: Will turn the platforms it moves over to white
     // draw ball frame by frame
     // swap buffer each time
     int x_coord = _WIDTH/2;
-    int y_coord = 0 + _BALLRADIUS;
+    int y_coord = _BALLRADIUS;
     for (int i = 0; i < _HEIGHT-(2*_BALLRADIUS); i++) {
         gl_draw_ball(x_coord, y_coord, _BALLRADIUS, GL_WHITE);
         y_coord++;
+        // if platform there
+        // int circumference[10][2] ;
+        // getCircumferencePoints(10, _BALLRADIUS, x_coord, y_coord, circumference);
+        // for (int j = 0; j < 10; j++) {
+        //     // if (gl_read_pixel(x_coord, y_coord+_BALLRADIUS) == GL_BLUE) {
+        //     if (gl_read_pixel(circumference[j][0], circumference[j][1]+_BALLRADIUS) == GL_BLUE) {
+        //         gl_draw_ball(x_coord, y_coord - 1, _BALLRADIUS, GL_BLUE);
+        //         break;
+        //     }
+        // }
+        if (gl_read_pixel(x_coord, y_coord+_BALLRADIUS) == GL_BLUE) {
+            // BUG: Only checks the center bottom point on the circle
+            gl_draw_ball(x_coord, y_coord - 1, _BALLRADIUS, GL_BLUE);
+            break;
+        }
         gl_draw_ball(x_coord, y_coord, _BALLRADIUS, GL_BLUE);
         gl_swap_buffer();
-        timer_delay_ms(300);
+        timer_delay_ms(100);
         gl_swap_buffer();
     }
 }
+
+// void getCircumferencePoints(int numPoints, int radius, int x_coord, int y_coord, int circumference[10][2]) {
+//     double slice = 2 * 3.1416 / numPoints;
+//     // int circumference = [numPoints][2]; //2D array
+//     for (int i = 0; i < numPoints; i++) {
+//         double angle = slice * i;
+//         int newX = (int)(x_coord + radius * cos(angle));
+//         int newY = (int)(y_coord + radius * sin(angle));
+//         circumference[i][0] = newX;
+//         circumference[i][1] = newY;
+//         // Point p = new Point(newX, newY);
+//         // Console.WriteLine(p);
+//     }
+// }
 
 // main program
 void main(void) {
