@@ -12,6 +12,15 @@
 #define _NCOLS 30
 #define _BALLRADIUS 10
 
+static struct platform {
+    int width;
+    int height;
+    int x;
+    int y;
+};
+
+struct platform platforms[10];
+
 // initialize window
 static void init_window(void) {
     gl_init(_WIDTH, _HEIGHT, GL_DOUBLEBUFFER);
@@ -29,32 +38,41 @@ void drawPlatform(int x, int y, int w, int h, color_t c) {
     gl_draw_rect(x, y, w, h, c);
 }
 
-// randomly generate platforms on screen
-void drawAllPlatforms() {
-    // fix height of platform and vertical gap between each platform
-    // randomize x coordinate and length of each platform (set min and max)
-    
-    //seed
+// generate and return a single random platform
+struct platform generateRandomPlatform() {
+    //random number generator seed
     int t = timer_get_ticks() % 1024;
     for (int i = 0; i < t; i++) {
         rand();
     }
-    
-    unsigned int p_height = 4;
-    unsigned int p_width = 0;
-    unsigned int x_coord = 0;
-    unsigned int y_coord = 0;
-    unsigned int num_platforms = 10;
-    
+    // fix height of platform and vertical gap between each platform
+    // randomize x coordinate and length of each platform (set min and max)
+    struct platform p;
     unsigned int min_p_width = _BALLRADIUS * 4;
     unsigned int max_p_width = _WIDTH / 2;
     unsigned int max_x_coord = _WIDTH - _BALLRADIUS * 4;
+    p.height = 4;
+    p.y = 0;
+    p.width = min_p_width + rand() % (max_p_width + 1 - min_p_width);
+    p.x = rand() % (max_x_coord - 1);
+    return p;
+}
 
+// generate initial array of platforms
+void generatePlatforms() {
+    struct platform p;
+    int y_coord = 0;
+    unsigned int num_platforms = 10;
     for (int i = 0; i < num_platforms; i++) {
-        p_width = min_p_width + rand() % (max_p_width + 1 - min_p_width);
-        x_coord = rand() % (max_x_coord - 1);
-        y_coord += (_HEIGHT / num_platforms);
-        drawPlatform(x_coord, y_coord, p_height, p_width, GL_BLUE);
+        p = generateRandomPlatform();
+        y_coord += ( _HEIGHT / num_platforms);
+        p.y = y_coord;
+//        printf("p.x = %d\n", p.x);
+//        printf("p.y = %d\n", p.y);
+//        printf("p.width = %d\n", p.width);
+//        printf("p.height = %d\n", p.height);
+        drawPlatform(p.x, p.y, p.height, p.width, GL_BLUE);
+        platforms[i] = p;
     }
 }
 
@@ -80,17 +98,25 @@ void moveBall() {
 }
 
 void movePlatforms() {
-    // we have a set number of platforms per level (game ends when all platforms have been scrolled through)
-    
+    struct platform p;
+    int start = 0;
+    // iterate through a circular array, generating a new random platform each time
+    for (int i = start; i < start + 10; i++) {
+        int index = i % 10;
+        p = generateRandomPlatform();
+        p.y = _HEIGHT;
+        platforms[index] = p;
+        start++;
+    }
 }
 
 // main program
 void main(void) {
     init_window();
     drawBall();
-    drawAllPlatforms(); 
+    generatePlatforms();
     moveBall();
-    movePlatforms();
+//    movePlatforms();
     gl_swap_buffer();
 }
 

@@ -133,4 +133,4 @@ int console_printf(const char *format, ...)
     
     return textlength;
 }
-}
+
