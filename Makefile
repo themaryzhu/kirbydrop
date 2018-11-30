@@ -23,7 +23,7 @@ MY_MODULES =  console.o gl.o fb.o
 CFLAGS = -I$(CS107E)/include -g -Wall -Og -std=c99 -ffreestanding 
 CFLAGS += -mapcs-frame -fno-omit-frame-pointer -mpoke-function-name -Wpointer-arith
 LDFLAGS = -nostdlib -T memmap -L$(CS107E)/lib
-LDLIBS = -lpi -lgcc
+LDLIBS = -lpi -lgcc 
 
 all : $(APPLICATION).bin $(MY_MODULES)
 

@@ -4,8 +4,6 @@
 #include "gl.h"
 #include "console.h"
 #include "printf.h"
-#include "math.h"
-// added libraries
 #include <stdlib.h>
 
 #define _WIDTH 600
@@ -36,7 +34,7 @@ void drawPlatform(int x, int y, int w, int h, color_t c) {
 void drawAllPlatforms() {
     // fix height of platform and vertical gap between each platform
     // randomize x coordinate and length of each platform (set min and max)
-    
+
     unsigned int p_height = 4;
     unsigned int p_width = 0;
     unsigned int x_coord = 0;
@@ -46,7 +44,7 @@ void drawAllPlatforms() {
     unsigned int min_p_width = _BALLRADIUS * 4;
     unsigned int max_p_width = _WIDTH / 2;
     unsigned int max_x_coord = _WIDTH - _BALLRADIUS * 4;
-    
+
     for (int i = 0; i < num_platforms; i++) {
         p_width = min_p_width + rand() % (max_p_width + 1 - min_p_width);
         x_coord = rand() % (max_x_coord - 1);
@@ -64,19 +62,9 @@ void moveBall() {
     for (int i = 0; i < _HEIGHT-(2*_BALLRADIUS); i++) {
         gl_draw_ball(x_coord, y_coord, _BALLRADIUS, GL_WHITE);
         y_coord++;
-        // if platform there
-        // int circumference[10][2] ;
-        // getCircumferencePoints(10, _BALLRADIUS, x_coord, y_coord, circumference);
-        // for (int j = 0; j < 10; j++) {
-        //     // if (gl_read_pixel(x_coord, y_coord+_BALLRADIUS) == GL_BLUE) {
-        //     if (gl_read_pixel(circumference[j][0], circumference[j][1]+_BALLRADIUS) == GL_BLUE) {
-        //         gl_draw_ball(x_coord, y_coord - 1, _BALLRADIUS, GL_BLUE);
-        //         break;
-        //     }
-        // }
-        if (gl_read_pixel(x_coord, y_coord+_BALLRADIUS) == GL_BLUE) {
-            // BUG: Only checks the center bottom point on the circle
-            gl_draw_ball(x_coord, y_coord - 1, _BALLRADIUS, GL_BLUE);
+        if (gl_draw_ball(x_coord, y_coord, _BALLRADIUS, GL_BLUE) == 0){
+            gl_draw_ball(x_coord, y_coord, _BALLRADIUS, GL_WHITE);
+            gl_draw_ball(x_coord, y_coord-1, _BALLRADIUS, GL_BLUE);
             break;
         }
         gl_draw_ball(x_coord, y_coord, _BALLRADIUS, GL_BLUE);
@@ -85,20 +73,6 @@ void moveBall() {
         gl_swap_buffer();
     }
 }
-
-// void getCircumferencePoints(int numPoints, int radius, int x_coord, int y_coord, int circumference[10][2]) {
-//     double slice = 2 * 3.1416 / numPoints;
-//     // int circumference = [numPoints][2]; //2D array
-//     for (int i = 0; i < numPoints; i++) {
-//         double angle = slice * i;
-//         int newX = (int)(x_coord + radius * cos(angle));
-//         int newY = (int)(y_coord + radius * sin(angle));
-//         circumference[i][0] = newX;
-//         circumference[i][1] = newY;
-//         // Point p = new Point(newX, newY);
-//         // Console.WriteLine(p);
-//     }
-// }
 
 // main program
 void main(void) {
