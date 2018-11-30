@@ -25,7 +25,6 @@ void drawBall() {
 
 // draw singular platform
 void drawPlatform(int x, int y, int w, int h, color_t c) {
-    //TODO: fix width/height mix-up
     //x and y are the top left coordinates of the rectangle
     gl_draw_rect(x, y, w, h, c);
 }
@@ -34,7 +33,13 @@ void drawPlatform(int x, int y, int w, int h, color_t c) {
 void drawAllPlatforms() {
     // fix height of platform and vertical gap between each platform
     // randomize x coordinate and length of each platform (set min and max)
-
+    
+    //seed
+    int t = timer_get_ticks() % 1024;
+    for (int i = 0; i < t; i++) {
+        rand();
+    }
+    
     unsigned int p_height = 4;
     unsigned int p_width = 0;
     unsigned int x_coord = 0;
@@ -74,12 +79,18 @@ void moveBall() {
     }
 }
 
+void movePlatforms() {
+    // we have a set number of platforms per level (game ends when all platforms have been scrolled through)
+    
+}
+
 // main program
 void main(void) {
     init_window();
     drawBall();
     drawAllPlatforms(); 
     moveBall();
+    movePlatforms();
     gl_swap_buffer();
 }
 

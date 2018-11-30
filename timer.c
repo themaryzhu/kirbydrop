@@ -4,7 +4,8 @@ void timer_init(void) {
 }
 
 unsigned int timer_get_ticks(void) {
-    return 0;  // TODO: Your code goes here.
+    volatile unsigned int * regPtr = ((volatile unsigned int *) (CLO));
+    return * regPtr;
 }
 
 void timer_delay_us(unsigned int usecs) {
