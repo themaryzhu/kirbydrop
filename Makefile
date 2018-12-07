@@ -1,5 +1,6 @@
 APPLICATION = apps/console_shell
-MY_MODULES =  console.o gl.o fb.o
+# MY_MODULES =  console.o gl.o fb.o
+MY_MODULES = 
 
 #  malloc.o backtrace.o printf.o strings.o gpio.o timer.o
 #  Can be added to MY_MODULES to use your own code
@@ -50,6 +51,9 @@ test: tests/test_console_and_gl.bin
 
 clean:
 	rm -f *.o *.bin *.elf *.list *~
+	rm -f apps/*.o apps/*.bin apps/*.elf apps/*.list *~
+	rm -f tests/*.o tests/*.bin tests/*.elf tests/*.list *~
+
 
 .PHONY: all clean install test
 
