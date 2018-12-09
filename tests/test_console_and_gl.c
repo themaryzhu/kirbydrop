@@ -80,25 +80,25 @@ struct gyroType gyro;
 void readGyro() {
     i2c_init();
     unsigned char buf[1024];
-    while (1) {
-        char acc_register = 0x3B;//0x80|0x28;//
-        i2c_write(MPU9250_ADDRESS,&acc_register,1);
-        // read accelerometer
-        i2c_read(MPU9250_ADDRESS,buf,14); 
+    // while (1) {
+    char acc_register = 0x3B;//0x80|0x28;//
+    i2c_write(MPU9250_ADDRESS,&acc_register,1);
+    // read accelerometer
+    i2c_read(MPU9250_ADDRESS,buf,14); 
 
-        // printf("%d\n", buf);
-        // convert to xyz values 
-        gyro.oldAx = gyro.ax;
-        gyro.ax=-(buf[0]<<8 | buf[1]);
-        gyro.ay=-(buf[2]<<8 | buf[3]);
-        gyro.az=buf[4]<<8 | buf[5];
-        // printf("%d,%d,%d\n",gyro.ax,gyro.ay,gyro.az);
-        gyro.oldGx = gyro.gx;
-        gyro.gx = buf[8]<<8 | buf[9]; // divide by counts per degree sec (32) then take kalman
-        // printf("%d\n",gyro.gx);
+    // printf("%d\n", buf);
+    // convert to xyz values 
+    gyro.oldAx = gyro.ax;
+    gyro.ax=-(buf[0]<<8 | buf[1]);
+    gyro.ay=-(buf[2]<<8 | buf[3]);
+    gyro.az=buf[4]<<8 | buf[5];
+    // printf("%d,%d,%d\n",gyro.ax,gyro.ay,gyro.az);
+    gyro.oldGx = gyro.gx;
+    gyro.gx = buf[8]<<8 | buf[9]; // divide by counts per degree sec (32) then take kalman
+    // printf("%d\n",gyro.gx);
 
-        timer_delay_ms(1000);
-    }
+    // timer_delay_ms(500);
+    // }
 }
 // --------
 
@@ -239,25 +239,29 @@ void scrollScreen() {
             platforms[i].y--;
             drawPlatform(platforms[i].x, platforms[i].y, platforms[i].width, platforms[i].height, _PLATFORMCOLOR);
         }
+        readGyro();
+        // moves ball up with platform
+        if (gyro.gx - gyro.oldGx >= 2000) {
+            if (gyro.ax - gyro.oldAx <= 3000) {
+                //move right
+                printf("Moving right \n");
+                x_coord += 1;
+            } else if (gyro.oldAx - gyro.ax <= 3000) {
+                //move left
+                printf("Moving left \n");
+                x_coord -= 1;
+            } else {
+                printf("no movement\n");
+            }
+        }
+        y_coord -= 1;
+        drawKirby(x_coord, y_coord, standing_kirby_left_map);
         // if ball collides with platform
         if (drawKirby(x_coord, y_coord, standing_kirby_left_map) == 0) {
             // if not touching left edge of screen
             if (x_coord > 0) {
                 // moves ball to the left
                 x_coord -= 1;
-            }
-            readGyro();
-            // moves ball up with platform
-            if (gyro.gx - gyro.oldGx >= 2000) {
-                if (gyro.ax - gyro.oldAx <= 3000) {
-                    //move right
-                    printf("Moving right \n");
-                    x_coord += 25;
-                } else if (gyro.oldAx - gyro.ax <= 3000) {
-                    //move left
-                    printf("Moving left \n");
-                    x_coord -= 25;
-                }
             }
             y_coord -= 1;
             drawKirby(x_coord, y_coord, standing_kirby_left_map);
