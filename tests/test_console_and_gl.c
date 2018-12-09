@@ -6,6 +6,9 @@
 #include "printf.h"
 #include "kirby.h"
 #include <stdlib.h>
+#include "strings.h"
+#include "i2c.h"
+#include "gpio.h"
 
 #define _WIDTH 600
 #define _HEIGHT 500
@@ -19,6 +22,85 @@
 
 #define _NROWS 20
 #define _NCOLS 30
+
+// --- gyro init ---
+#define    MPU9250_ADDRESS            0x68 //0x6B
+#define    MAG_ADDRESS                0x0C
+
+#define    GYRO_FULL_SCALE_250_DPS    0x00
+#define    GYRO_FULL_SCALE_500_DPS    0x08
+#define    GYRO_FULL_SCALE_1000_DPS   0x10
+#define    GYRO_FULL_SCALE_2000_DPS   0x18
+#define    LSM9DS1_REGISTER_CTRL_REG6_XL 0x20
+#define    LSM9DS1_REGISTER_CTRL_REG8 0x22
+#define    ACC_FULL_SCALE_2_G        0x00
+#define    ACC_FULL_SCALE_4_G        0x08
+#define    ACC_FULL_SCALE_8_G        0x10
+#define    ACC_FULL_SCALE_16_G       0x18
+
+typedef unsigned char uint8_t;
+
+// Write a byte (Data) in device (Address) at register (Register)
+void i2c_writeByte(unsigned Address, uint8_t Register, uint8_t Data)
+{
+  i2c_write(MPU9250_ADDRESS,(char *)&Register,1);
+  i2c_write(MPU9250_ADDRESS,(char *)&Data,1);
+}
+
+void chip_init() {
+  // Set accelerometers low pass filter at 5Hz
+  i2c_writeByte(MPU9250_ADDRESS,29,0x06);
+  // Set gyroscope low pass filter at 5Hz
+  i2c_writeByte(MPU9250_ADDRESS,26,0x06);
+
+  // Configure gyroscope range
+  i2c_writeByte(MPU9250_ADDRESS,27,GYRO_FULL_SCALE_1000_DPS);
+  // Configure accelerometers range
+  i2c_writeByte(MPU9250_ADDRESS,28,ACC_FULL_SCALE_4_G);
+  // Set by pass mode for the magnetometers
+  i2c_writeByte(MPU9250_ADDRESS,0x37,0x02);
+
+  // Request continuous magnetometer measurements in 16 bits
+  i2c_writeByte(MAG_ADDRESS,0x0A,0x16); 
+}
+
+// static typedef struct {
+static struct gyroType {
+    int ax;
+    int ay;
+    int az;
+    int oldAx;
+    int gx;
+    int oldGx;
+}; //gyroType;
+
+struct gyroType gyro;
+// static gyroType gyro;
+
+void readGyro() {
+    i2c_init();
+    unsigned char buf[1024];
+    while (1) {
+        char acc_register = 0x3B;//0x80|0x28;//
+        i2c_write(MPU9250_ADDRESS,&acc_register,1);
+        // read accelerometer
+        i2c_read(MPU9250_ADDRESS,buf,14); 
+
+        // printf("%d\n", buf);
+        // convert to xyz values 
+        gyro.oldAx = gyro.ax;
+        gyro.ax=-(buf[0]<<8 | buf[1]);
+        gyro.ay=-(buf[2]<<8 | buf[3]);
+        gyro.az=buf[4]<<8 | buf[5];
+        // printf("%d,%d,%d\n",gyro.ax,gyro.ay,gyro.az);
+        gyro.oldGx = gyro.gx;
+        gyro.gx = buf[8]<<8 | buf[9]; // divide by counts per degree sec (32) then take kalman
+        // printf("%d\n",gyro.gx);
+
+        timer_delay_ms(1000);
+    }
+}
+// --------
 
 static struct platform {
     int width;
@@ -127,6 +209,10 @@ void generatePlatforms() {
     }
 }
 
+void gameOver() {
+    timer_delay(3);
+}
+
 // move ball and platforms on display
 void scrollScreen() {
     // starting coordinates of kirby
@@ -160,7 +246,19 @@ void scrollScreen() {
                 // moves ball to the left
                 x_coord -= 1;
             }
+            readGyro();
             // moves ball up with platform
+            if (gyro.gx - gyro.oldGx >= 2000) {
+                if (gyro.ax - gyro.oldAx <= 3000) {
+                    //move right
+                    printf("Moving right \n");
+                    x_coord += 25;
+                } else if (gyro.oldAx - gyro.ax <= 3000) {
+                    //move left
+                    printf("Moving left \n");
+                    x_coord -= 25;
+                }
+            }
             y_coord -= 1;
             drawKirby(x_coord, y_coord, standing_kirby_left_map);
         } else {
@@ -176,10 +274,6 @@ void scrollScreen() {
         timer_delay_ms(10);
     }
     gameOver();
-}
-
-void gameOver() {
-    timer_delay(3);
 }
 
 // main program
