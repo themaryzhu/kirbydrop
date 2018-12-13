@@ -43,25 +43,25 @@ typedef unsigned char uint8_t;
 // Write a byte (Data) in device (Address) at register (Register)
 void i2c_writeByte(unsigned Address, uint8_t Register, uint8_t Data)
 {
-  i2c_write(MPU9250_ADDRESS,(char *)&Register,1);
-  i2c_write(MPU9250_ADDRESS,(char *)&Data,1);
+    i2c_write(MPU9250_ADDRESS,(char *)&Register,1);
+    i2c_write(MPU9250_ADDRESS,(char *)&Data,1);
 }
 
 void chip_init() {
-  // Set accelerometers low pass filter at 5Hz
-  i2c_writeByte(MPU9250_ADDRESS,29,0x06);
-  // Set gyroscope low pass filter at 5Hz
-  i2c_writeByte(MPU9250_ADDRESS,26,0x06);
-
-  // Configure gyroscope range
-  i2c_writeByte(MPU9250_ADDRESS,27,GYRO_FULL_SCALE_1000_DPS);
-  // Configure accelerometers range
-  i2c_writeByte(MPU9250_ADDRESS,28,ACC_FULL_SCALE_4_G);
-  // Set by pass mode for the magnetometers
-  i2c_writeByte(MPU9250_ADDRESS,0x37,0x02);
-
-  // Request continuous magnetometer measurements in 16 bits
-  i2c_writeByte(MAG_ADDRESS,0x0A,0x16); 
+    // Set accelerometers low pass filter at 5Hz
+    i2c_writeByte(MPU9250_ADDRESS,29,0x06);
+    // Set gyroscope low pass filter at 5Hz
+    i2c_writeByte(MPU9250_ADDRESS,26,0x06);
+    
+    // Configure gyroscope range
+    i2c_writeByte(MPU9250_ADDRESS,27,GYRO_FULL_SCALE_1000_DPS);
+    // Configure accelerometers range
+    i2c_writeByte(MPU9250_ADDRESS,28,ACC_FULL_SCALE_4_G);
+    // Set by pass mode for the magnetometers
+    i2c_writeByte(MPU9250_ADDRESS,0x37,0x02);
+    
+    // Request continuous magnetometer measurements in 16 bits
+    i2c_writeByte(MAG_ADDRESS,0x0A,0x16);
 }
 
 // static typedef struct {
@@ -84,10 +84,10 @@ void readGyro() {
     char acc_register = 0x3B;//0x80|0x28;//
     i2c_write(MPU9250_ADDRESS,&acc_register,1);
     // read accelerometer
-    i2c_read(MPU9250_ADDRESS,buf,14); 
-
+    i2c_read(MPU9250_ADDRESS,buf,14);
+    
     // printf("%d\n", buf);
-    // convert to xyz values 
+    // convert to xyz values
     gyro.oldAx = gyro.ax;
     gyro.ax=-(buf[0]<<8 | buf[1]);
     gyro.ay=-(buf[2]<<8 | buf[3]);
@@ -96,7 +96,7 @@ void readGyro() {
     gyro.oldGx = gyro.gx;
     gyro.gx = buf[8]<<8 | buf[9]; // divide by counts per degree sec (32) then take kalman
     // printf("%d\n",gyro.gx);
-
+    
     // timer_delay_ms(500);
     // }
 }
@@ -146,7 +146,7 @@ void welcomeMessage() {
     gl_draw_string(x1, y1, strWelcome, _BALLCOLOR);
     drawKirby(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 8) * 3, standing_kirby_right_map);
     timer_delay(1);
-
+    
     // loop until user presses Start
     for (int i = 0; i < 3; i++) {
         char* str = "Press 'A' to Start";
@@ -210,6 +210,7 @@ void generatePlatforms() {
 }
 
 void gameOver() {
+    printf("GAME OVER\n");
     timer_delay(3);
 }
 
@@ -239,33 +240,48 @@ void scrollScreen() {
             platforms[i].y--;
             drawPlatform(platforms[i].x, platforms[i].y, platforms[i].width, platforms[i].height, _PLATFORMCOLOR);
         }
-        readGyro();
-        // moves ball up with platform
-        if (gyro.gx - gyro.oldGx >= 2000) {
-            if (gyro.ax - gyro.oldAx <= 3000) {
-                //move right
-                printf("Moving right \n");
-                x_coord += 1;
-            } else if (gyro.oldAx - gyro.ax <= 3000) {
-                //move left
-                printf("Moving left \n");
-                x_coord -= 1;
-            } else {
-                printf("no movement\n");
-            }
-        }
-        y_coord -= 1;
-        drawKirby(x_coord, y_coord, standing_kirby_left_map);
         // if ball collides with platform
         if (drawKirby(x_coord, y_coord, standing_kirby_left_map) == 0) {
             // if not touching left edge of screen
             if (x_coord > 0) {
-                // moves ball to the left
-                x_coord -= 1;
+                readGyro();
+                // moves ball up with platform
+                if (gyro.gx - gyro.oldGx >= 2000) {
+                    if (gyro.ax - gyro.oldAx <= 1000) {
+                        //move right
+                        printf("Moving right \n");
+                        x_coord += 1;
+                    } else if (gyro.oldAx - gyro.ax <= 3000) {
+                        //move left
+                        printf("Moving left \n");
+                        x_coord -= 1;
+                    }
+                } //else {
+                // printf("no movement\n");
+                //}
+                // // moves ball to the left
+                // x_coord -= 1;
             }
             y_coord -= 1;
             drawKirby(x_coord, y_coord, standing_kirby_left_map);
         } else {
+            readGyro();
+            // moves ball up with platform
+            if (gyro.gx - gyro.oldGx >= 2000) {
+                if (gyro.ax - gyro.oldAx <= 1000) {
+                    //move right
+                    printf("Moving right \n");
+                    x_coord += 1;
+                } else if (gyro.oldAx - gyro.ax <= 3000) {
+                    //move left
+                    printf("Moving left \n");
+                    x_coord -= 1;
+                }
+            } //else {
+            // printf("no movement\n");
+            // }
+            // y_coord -= 1;
+            // drawKirby(x_coord, y_coord, standing_kirby_left_map);
             // ball continues free-falling
             y_coord++;
             drawKirby(x_coord, y_coord, standing_kirby_left_map);
@@ -306,3 +322,4 @@ void main(void) {
 // gl_draw_char(60, 10, 'A', GL_BLUE);
 // gl_draw_string(300, 300, "Hi Eric", GL_AMBER);
 // gl_swap_buffer();
+

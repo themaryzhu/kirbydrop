@@ -1,4 +1,4 @@
-APPLICATION = apps/console_shell
+APPLICATION = apps/game
 # MY_MODULES =  console.o gl.o fb.o
 MY_MODULES = 
 
@@ -24,7 +24,7 @@ MY_MODULES =
 CFLAGS = -I$(CS107E)/include -g -Wall -Og -std=c99 -ffreestanding 
 CFLAGS += -mapcs-frame -fno-omit-frame-pointer -mpoke-function-name -Wpointer-arith
 LDFLAGS = -nostdlib -T memmap -L$(CS107E)/lib
-LDLIBS =  -lpiextra -lpi -lgcc 
+LDLIBS = -lpi -lpiextra -lgcc 
 
 all : $(APPLICATION).bin $(MY_MODULES)
 
