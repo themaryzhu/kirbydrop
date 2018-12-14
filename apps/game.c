@@ -6,15 +6,12 @@
 #include "console.h"
 #include "printf.h"
 #include "kirby.h"
-//#include "kirby_background.h"
 #include "string.h"
 #include "shell.h"
 #include <stdlib.h>
 #include "i2c.h"
 #include "gpio.h"
 #include "keyboard.h"
-
-
 
 #define _WIDTH 600
 #define _HEIGHT 500
@@ -88,27 +85,19 @@ struct gyroType gyro;
 // static gyroType gyro;
 
 void readGyro() {
-    //    i2c_init();
     unsigned char buf[1024];
-    // while (1) {
     char acc_register = 0x3B;//0x80|0x28;//
     i2c_write(MPU9250_ADDRESS,&acc_register,1);
     // read accelerometer
     i2c_read(MPU9250_ADDRESS,buf,14);
     
-    // printf("%d\n", buf);
     // convert to xyz values
     gyro.oldAx = gyro.ax;
     gyro.ax=-(buf[0]<<8 | buf[1]);
     gyro.ay=-(buf[2]<<8 | buf[3]);
     gyro.az=buf[4]<<8 | buf[5];
-    printf("%d,%d,%d\n",gyro.ax,gyro.ay,gyro.az);
     gyro.oldGx = gyro.gx;
     gyro.gx = buf[8]<<8 | buf[9]; // divide by counts per degree sec (32) then take kalman
-    printf("%d\n",gyro.gx);
-    
-    // timer_delay_ms(500);
-    // }
 }
 // --------
 int initgx = 0;
@@ -117,11 +106,13 @@ struct platform {
     int height;
     int x;
     int y;
+    int draw;
 };
 
 struct coin {
     int x;
     int y;
+    int draw;
 };
 
 struct platform platforms[_NPLATFORMS];
@@ -135,11 +126,18 @@ static void init_window(void) {
     i2c_init();
     gl_init(_WIDTH, _HEIGHT, GL_DOUBLEBUFFER);
     gl_clear(GL_WHITE);
+    readGyro();
+    initgx = gyro.gx;
+    readGyro();
+    initgx += gyro.gx;
+    readGyro();
+    initgx += gyro.gx;
+    initgx /= 3;
 }
 
 // x and y coordinates are the top left corner of image
 void drawKirbyStandingWalking (int x, int y, unsigned kirby_map[]) {
-    int size = 1436;
+    int size = 1440;
     int originalx = x;
     for (int i = 0; i < size / 4; i++) {
         if (x < gl_get_width() && y < gl_get_height()) {
@@ -170,7 +168,133 @@ void drawKirbyDropping (int x, int y, unsigned kirby_map[]) {
     }
 }
 
-// kirbydrop logo width = 300
+void drawKirbyGhost (int x, int y, unsigned kirby_map[]) {
+    int size = 1884;
+    int originalx = x;
+    for (int i = 0; i < size / 4; i++) {
+        if (x < gl_get_width() && y < gl_get_height()) {
+            gl_draw_pixel(x, y, kirby_map[i]);
+        }
+        if ((i+1) % 24 == 0) {
+            y++;
+            x = originalx;
+        } else {
+            x++;
+        }
+    }
+}
+
+//height = 70
+//width = 314
+//gwidth = 36
+//awidth = 36
+//mwidth = 60
+//edwidth = 36
+//space = 6
+//owdith = 36
+//vwidth = 36
+//edwidth = 36
+//rwidth = 32
+void drawGameOver() {
+    //G
+    gl_draw_rect(140, 162, 4, 46, GL_BLACK);
+    gl_draw_rect(144, 158, 4, 4, GL_BLACK);
+    gl_draw_rect(148, 154, 4, 4, GL_BLACK);
+    gl_draw_rect(152, 150, 12, 4, GL_BLACK);
+    gl_draw_rect(164, 154, 4, 4, GL_BLACK);
+    gl_draw_rect(168, 158, 4, 4, GL_BLACK);
+    gl_draw_rect(172, 162, 4, 46, GL_BLACK);
+    gl_draw_rect(144, 206, 4, 6, GL_BLACK);
+    gl_draw_rect(148, 210, 4, 6, GL_BLACK);
+    gl_draw_rect(152, 214, 12, 6, GL_BLACK);
+    gl_draw_rect(164, 210, 4, 6, GL_BLACK);
+    gl_draw_rect(168, 206, 4, 6, GL_BLACK);
+    gl_draw_rect(160, 178, 12, 4, GL_BLACK);
+    gl_draw_rect(160, 178, 4, 8, GL_BLACK);
+    //a
+    gl_draw_rect(176, 186, 4, 22, GL_BLACK);
+    gl_draw_rect(180, 182, 4, 4, GL_BLACK);
+    gl_draw_rect(184, 178, 4, 4, GL_BLACK);
+    gl_draw_rect(188, 174, 24, 4, GL_BLACK);
+    gl_draw_rect(208, 174, 4, 46, GL_BLACK);
+    gl_draw_rect(180, 206, 4, 6, GL_BLACK);
+    gl_draw_rect(184, 210, 4, 6, GL_BLACK);
+    gl_draw_rect(188, 214, 20, 6, GL_BLACK);
+    gl_draw_rect(192, 190, 4, 12, GL_BLACK);
+    //m
+    gl_draw_rect(212, 186, 4, 34, GL_BLACK);
+    gl_draw_rect(216, 182, 4, 4, GL_BLACK);
+    gl_draw_rect(220, 178, 4, 4, GL_BLACK);
+    gl_draw_rect(224, 174, 12, 4, GL_BLACK);
+    gl_draw_rect(236, 178, 4, 4, GL_BLACK);
+    gl_draw_rect(240, 182, 4, 16, GL_BLACK);
+    gl_draw_rect(244, 178, 4, 4, GL_BLACK);
+    gl_draw_rect(248, 174, 12, 4, GL_BLACK);
+    gl_draw_rect(260, 178, 4, 4, GL_BLACK);
+    gl_draw_rect(264, 182, 4, 4, GL_BLACK);
+    gl_draw_rect(268, 186, 4, 34, GL_BLACK);
+    gl_draw_rect(212, 214, 60, 6, GL_BLACK);
+    gl_draw_rect(228, 194, 4, 20, GL_BLACK);
+    gl_draw_rect(252, 194, 4, 20, GL_BLACK);
+    //e
+    gl_draw_rect(272, 186, 4, 22, GL_BLACK);
+    gl_draw_rect(276, 182, 4, 4, GL_BLACK);
+    gl_draw_rect(280, 178, 4, 4, GL_BLACK);
+    gl_draw_rect(284, 174, 24, 4, GL_BLACK);
+    gl_draw_rect(304, 174, 4, 46, GL_BLACK);
+    gl_draw_rect(276, 206, 4, 6, GL_BLACK);
+    gl_draw_rect(280, 210, 4, 6, GL_BLACK);
+    gl_draw_rect(284, 214, 20, 6, GL_BLACK);
+    gl_draw_rect(292, 186, 4, 4, GL_BLACK);
+    gl_draw_rect(292, 198, 12, 4, GL_BLACK);
+    //O
+    gl_draw_rect(314, 162, 4, 46, GL_BLACK);
+    gl_draw_rect(318, 158, 4, 4, GL_BLACK);
+    gl_draw_rect(322, 154, 4, 4, GL_BLACK);
+    gl_draw_rect(326, 150, 12, 4, GL_BLACK);
+    gl_draw_rect(338, 154, 4, 4, GL_BLACK);
+    gl_draw_rect(342, 158, 4, 4, GL_BLACK);
+    gl_draw_rect(346, 162, 4, 46, GL_BLACK);
+    gl_draw_rect(318, 206, 4, 6, GL_BLACK);
+    gl_draw_rect(322, 210, 4, 6, GL_BLACK);
+    gl_draw_rect(326, 214, 12, 6, GL_BLACK);
+    gl_draw_rect(338, 210, 4, 6, GL_BLACK);
+    gl_draw_rect(342, 206, 4, 6, GL_BLACK);
+    gl_draw_rect(330, 178, 4, 12, GL_BLACK);
+    //v
+    gl_draw_rect(350, 174, 4, 34, GL_BLACK);
+    gl_draw_rect(350, 174, 36, 4, GL_BLACK);
+    gl_draw_rect(382, 174, 4, 34, GL_BLACK);
+    gl_draw_rect(354, 206, 4, 6, GL_BLACK);
+    gl_draw_rect(358, 210, 4, 6, GL_BLACK);
+    gl_draw_rect(362, 214, 12, 6, GL_BLACK);
+    gl_draw_rect(374, 210, 4, 6, GL_BLACK);
+    gl_draw_rect(378, 206, 4, 6, GL_BLACK);
+    gl_draw_rect(366, 174, 4, 16, GL_BLACK);
+    //e
+    gl_draw_rect(386, 186, 4, 22, GL_BLACK);
+    gl_draw_rect(390, 182, 4, 4, GL_BLACK);
+    gl_draw_rect(394, 178, 4, 4, GL_BLACK);
+    gl_draw_rect(398, 174, 24, 4, GL_BLACK);
+    gl_draw_rect(418, 174, 4, 46, GL_BLACK);
+    gl_draw_rect(390, 206, 4, 6, GL_BLACK);
+    gl_draw_rect(394, 210, 4, 6, GL_BLACK);
+    gl_draw_rect(398, 214, 24, 6, GL_BLACK);
+    gl_draw_rect(406, 198, 12, 4, GL_BLACK);
+    gl_draw_rect(406, 186, 4, 4, GL_BLACK);
+    //r
+    gl_draw_rect(422, 186, 4, 34, GL_BLACK);
+    gl_draw_rect(426, 182, 4, 4, GL_BLACK);
+    gl_draw_rect(430, 178, 4, 4, GL_BLACK);
+    gl_draw_rect(434, 174, 20, 4, GL_BLACK);
+    gl_draw_rect(450, 174, 4, 18, GL_BLACK);
+    gl_draw_rect(442, 186, 12, 6, GL_BLACK);
+    gl_draw_rect(438, 190, 8, 6, GL_BLACK);
+    gl_draw_rect(438, 190, 4, 30, GL_BLACK);
+    gl_draw_rect(422, 214, 20, 6, GL_BLACK);
+}
+
+//width = 300
 //height = 72
 //starting x= 150
 //starting y = 150
@@ -182,10 +306,6 @@ void drawKirbyDropping (int x, int y, unsigned kirby_map[]) {
 //Dwidth = 36
 //rwidth = 32
 //owidth = 36
-
-
-//void gl_draw_rect(int x, int y, int w, int h, color_t c)
-
 void drawKirbyDrop() {
     gl_draw_rect(150, 150, 4, 72, GL_BLACK);
     gl_draw_rect(150, 150, 36, 4, GL_BLACK);
@@ -271,6 +391,14 @@ void drawKirbyDrop() {
     gl_draw_rect(414, 174, 4, 64, GL_BLACK);
     gl_draw_rect(414, 174, 24, 4, GL_BLACK);
     gl_draw_rect(414, 232, 20, 6, GL_BLACK);
+    gl_draw_rect(438, 178, 4, 4, GL_BLACK);
+    gl_draw_rect(442, 182, 4, 4, GL_BLACK);
+    gl_draw_rect(446, 186, 4, 22, GL_BLACK);
+    gl_draw_rect(442, 206, 4, 6, GL_BLACK);
+    gl_draw_rect(438, 210, 4, 6, GL_BLACK);
+    gl_draw_rect(430, 214, 8, 6, GL_BLACK);
+    gl_draw_rect(430, 214, 4, 22, GL_BLACK);
+    gl_draw_rect(430, 190, 4, 12, GL_BLACK);
 }
 
 void welcome() {
@@ -279,42 +407,17 @@ void welcome() {
     int lengthWelcome = strlen(strWelcome);
     int x1 = _WIDTH / 2 - lengthWelcome * gl_get_char_width() / 2;
     int y1 = _HEIGHT / 4;
-    char* str = "Turn controller right to start";
+    char* str = "Swipe right to start";
     int length = strlen(str);
     int x = _WIDTH / 2 - length * gl_get_char_width() / 2;
     int y = _HEIGHT / 2;
     
     gl_clear(GL_PASTEL_BLUE);
     drawKirbyDrop();
-//    gl_draw_string(x1, y1, strWelcome, _TEXTCOLOR);
     drawKirbyStandingWalking(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 9) * 5, blue_kirby_map);
     gl_draw_string(x, y, str, _TEXTCOLOR);
     gl_swap_buffer();
-//    gl_draw_rect(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 8) * 3, _KIRBYWIDTH, _KIRBYWIDTH, GL_RED);
-//    drawKirby(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 8) * 3, walking_kirby_right_map);
-//    timer_delay(1);
-//    gl_draw_rect(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 8) * 3, _KIRBYWIDTH, _KIRBYWIDTH, GL_RED);
-//    drawKirby(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 8) * 3, standing_kirby_right_map);
-//    timer_delay(1);
-
-    // loop until user presses Start
-//    while (start != 10) {
-//        gl_draw_string(x1, y1, strWelcome, _TEXTCOLOR);
-//        drawKirby(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 8) * 3, standing_kirby_right_map);
-//        gl_draw_string(x, y, str, _TEXTCOLOR);
-//        timer_delay(1);
-//        gl_swap_buffer();
-//        gl_clear(GL_WHITE);
-//
-//        gl_draw_string(x1, y1, strWelcome, _TEXTCOLOR);
-//        drawKirby(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 8) * 3, standing_kirby_right_map);
-//        gl_draw_string(x, y, str, GL_WHITE);
-//        timer_delay(1);
-//        gl_swap_buffer();
-//        gl_clear(GL_WHITE);
-//
-//    }
-//    keyboard_read_next();
+    timer_delay(2);
     while (true) {
         readGyro();
         if (gyro.ax < -45000 && gyro.ax > -65000) {
@@ -322,21 +425,11 @@ void welcome() {
         }
     }
     gl_swap_buffer();
-
-//    readGyro();
-//    initgx = gyro.gx;
-//    readGyro();
-//    initgx += gyro.gx;
-//    readGyro();
-//    initgx += gyro.gx;
-//    initgx /= 3;
-
 }
 
 // draw singular platform
 void drawPlatform(int x, int y, int width, int height, color_t c) {
     //x and y are the top left coordinates of the rectangle
-//    gl_draw_rect(x, y, w, h, c);
     int size = sizeof(brick_map);
     int originalx = x;
     int originaly = y;
@@ -394,7 +487,6 @@ struct platform generateRandomPlatform() {
     unsigned int max_x_coord = _WIDTH - _KIRBYWIDTH * 4;
     p.height = 4;
     p.y = 0;
-    // MANIPULATE WIDTH SO THAT IT IS A DIVISOR OF PLATFORM WIDTH
     p.width = min_p_width + rand() % (max_p_width + 1 - min_p_width);
     p.x = rand() % (max_x_coord - 1);
     return p;
@@ -407,11 +499,10 @@ struct coin generateRandomCoin(int min_x_coord, int max_x_coord) {
     for (int i = 0; i < t; i++) {
         rand();
     }
-    // fix height of platform and vertical gap between each platform
-    // randomize x coordinate and length of each platform (set min and max)
     struct coin c;
     c.y = 0;
     c.x = min_x_coord + rand() % (max_x_coord + 1 - min_x_coord);
+    c.draw = 1;
     return c;
 }
 
@@ -433,7 +524,7 @@ void generatePlatformsandCoins() {
             c.y = y_coord - _COINHEIGHT;
             coins[i] = c;
             doubleCoins = 0;
-        }else if (p.width % 3 == 0) {
+        } else if (p.width % 3 == 0) {
             doubleCoins = 1;
         } else {
             c = generateRandomCoin(p.x, p.x + p.width - _COINWIDTH);
@@ -446,14 +537,9 @@ void generatePlatformsandCoins() {
 
 // checks if Kirby collides with a platform
 int checkCollide(int x, int y, unsigned kirby_map[]) {
-    int h;
-    if (kirby_map == dropping_kirby_right_map || dropping_kirby_left_map) {
-        h = _KIRBYWIDTH * 9 / 10;
-    } else {
-        h = _KIRBYWIDTH;
-    }
+    int h = _KIRBYWIDTH - 1;
     for (int i = 0; i < _KIRBYWIDTH; i++) {
-        if (gl_read_pixel(x + i, y + h) == GL_TAN || gl_read_pixel(x + i, y + h) == GL_DARK_BROWN) {
+        if (gl_read_pixel(x + i, y + h) == GL_TAN || gl_read_pixel(x + i, y + h) == GL_DARK_BROWN || gl_read_pixel(x + i, y + h - 1) == GL_TAN || gl_read_pixel(x + i, y + h - 1) == GL_DARK_BROWN || gl_read_pixel(x + i, y + h - 2) == GL_TAN || gl_read_pixel(x + i, y + h - 2) == GL_DARK_BROWN) {
             return 0;
         }
     }
@@ -463,7 +549,7 @@ int checkCollide(int x, int y, unsigned kirby_map[]) {
 int checkCoinIndex(int x, int y) {
     for (int i = 0; i < _NCOINS; i++) {
         if ((x >= coins[i].x) && (x <= (coins[i].x + _COINWIDTH)) && (y >= coins[i].y) && (y <= (coins[i].y + _COINHEIGHT))) {
-            printf("index of the coin collected = %d\n", i);
+            coins[i].draw = 0;
             return i;
         }
     }
@@ -495,9 +581,8 @@ int checkCoin(int x, int y, unsigned kirby_map[]) {
     return -1;
 }
 
-// move ball and platforms on display
+// move Kirby and platforms on display
 void scrollScreen() {
-        // starting coordinates of kirby
     int x_coord = _WIDTH / 2 - _KIRBYWIDTH / 2;
     int y_coord = _KIRBYWIDTH;
     int coinIndex;
@@ -505,17 +590,17 @@ void scrollScreen() {
     char direction;
     int skipdraw = 0;
     int justAdded = 0;
+    platforms[0].draw = 1;
+    platforms[1].draw = 1;
     
     struct platform p;
     struct coin c;
-    // loop to animate both platforms and ball
+    // loop to animate both platforms and Kirby
     for (int i = 0; i < _HEIGHT * 5; i++) {
         unsigned int * previous_kirby = dropping_kirby_right_map;
         coinIndex = checkCoin(x_coord, y_coord, previous_kirby);
         if (justAdded != 1) {
             if (coinIndex >= 0) {
-                collidedCoins[tracker] = coinIndex;
-                tracker++;
                 points++;
                 justAdded = 1;
             }
@@ -528,20 +613,11 @@ void scrollScreen() {
             p = generateRandomPlatform();
             p.y = _HEIGHT;
             c = generateRandomCoin(p.x, p.x + p.width - _COINWIDTH);
-            c.y = p.y + ( _HEIGHT / _NPLATFORMS) - _COINHEIGHT;
+            c.y = p.y - _COINHEIGHT;
             // shift circular arrays of platforms and coins
             for (int j = 0; j < _NPLATFORMS - 1; j++) {
                 platforms[j] = platforms[j + 1];
                 coins[j] = coins[j+1];
-            }
-            for (int j = 0; j < tracker; j++) {
-                collidedCoins[j]--;
-                if (collidedCoins[j] < 0) {
-                    for (int j = 0; j < tracker; j++) {
-                        collidedCoins[j] = collidedCoins[j+1];
-                    }
-                    tracker--;
-                }
             }
             platforms[_NPLATFORMS - 1] = p;
             coins[_NCOINS - 1] = c;
@@ -550,60 +626,64 @@ void scrollScreen() {
         for (int i = 0; i < _NPLATFORMS; i++) {
             skipdraw = 0;
             platforms[i].y--;
-            drawPlatform(platforms[i].x, platforms[i].y, platforms[i].width, platforms[i].height, _PLATFORMCOLOR);
-            coins[i].y--;
-            // if no coins have been collected
-            if (tracker == 0) {
-                drawCoin(coins[i].x, coins[i].y);
+            if (platforms[i].draw == 1) {
+                platforms[i].draw == 0;
             } else {
-                for (int j = 0; j < tracker; j++) {
-                    if (collidedCoins[j] == i){
-                        skipdraw = 1;
-                    }
-                }
-                if (skipdraw == 0) {
-                    drawCoin(coins[i].x, coins[i].y);
-                }
+                drawPlatform(platforms[i].x, platforms[i].y, platforms[i].width, platforms[i].height, _PLATFORMCOLOR);
+            }
+            coins[i].y--;
+            if (coins[i].draw == 1) {
+                drawCoin(coins[i].x, coins[i].y);
             }
         }
         // if Kirby collides with platform
         if (checkCollide(x_coord, y_coord, previous_kirby) == 0) {
-            // if not touching left edge of screen
-            if (x_coord > 0 && (x_coord + _KIRBYWIDTH) < _WIDTH) {
+            if (x_coord <= 0 || (x_coord + _KIRBYWIDTH) >= _WIDTH) {
+                if (gyro.currDirection == 1) {
+                    y_coord -= 1;
+                    x_coord -= 3;
+                    drawKirbyStandingWalking(x_coord, y_coord, standing_kirby_right_map);
+                    previous_kirby = standing_kirby_right_map;
+                    gyro.currDirection = 2;
+                } else {
+                    y_coord -= 1;
+                    x_coord += 3;
+                    drawKirbyStandingWalking(x_coord, y_coord, standing_kirby_left_map);
+                    previous_kirby = standing_kirby_left_map;
+                    gyro.currDirection = 1;
+                }
+            }
+            else {
                 readGyro();
-                // moves ball up with platform
-                if (gyro.gx < 400) {
-                    //moving
-                    if (gyro.ax < -45000 && gyro.ax > -65000) {
-                        printf("Moving right \n");
-                        gyro.currDirection = 1;
-                        x_coord += 2;
-                        y_coord -= 1;
-                        if (y_coord % 2 == 0) {
-                            drawKirbyStandingWalking(x_coord, y_coord, standing_kirby_right_map);
-                            previous_kirby = standing_kirby_right_map;
-                        } else {
-                            drawKirbyStandingWalking(x_coord, y_coord, walking_kirby_right_map);
-                            previous_kirby = walking_kirby_right_map;
-                        }
-                    } else if (gyro.ax < -14000 && gyro.ax > -18000) {
-                        gyro.currDirection = 2;
-                        printf("Moving left \n");
-                        x_coord -= 2;
-                        y_coord -= 1;
-                        if (y_coord % 2 == 0) {
-                            drawKirbyStandingWalking(x_coord, y_coord, standing_kirby_left_map);
-                            previous_kirby = standing_kirby_left_map;
-                        } else {
-                            drawKirbyStandingWalking(x_coord, y_coord, walking_kirby_left_map);
-                            previous_kirby = walking_kirby_left_map;
-                        }
+                if (gyro.ax < -45000 && gyro.ax > -65000) {
+//                        printf("Moving right \n");
+                    gyro.currDirection = 1;
+                    x_coord += 3;
+                    y_coord -= 1;
+                    if (y_coord % 2 == 0) {
+                        drawKirbyStandingWalking(x_coord, y_coord, standing_kirby_right_map);
+                        previous_kirby = standing_kirby_right_map;
+                    } else {
+                        drawKirbyStandingWalking(x_coord, y_coord, walking_kirby_right_map);
+                        previous_kirby = walking_kirby_right_map;
+                    }
+                } else if (gyro.ax < -14000 && gyro.ax > -34000) {
+                    gyro.currDirection = 2;
+//                       printf("Moving left \n");
+                    x_coord -= 3;
+                    y_coord -= 1;
+                    if (y_coord % 2 == 0) {
+                        drawKirbyStandingWalking(x_coord, y_coord, standing_kirby_left_map);
+                        previous_kirby = standing_kirby_left_map;
+                    } else {
+                        drawKirbyStandingWalking(x_coord, y_coord, walking_kirby_left_map);
+                        previous_kirby = walking_kirby_left_map;
                     }
                 } else {
-                    printf("no movement\n");
+//                    printf("no movement\n");
                     if (gyro.currDirection == 1) {
                         // move right
-                        x_coord += 2;
+                        x_coord += 3;
                         y_coord -= 1;
                         if (y_coord % 2 == 0) {
                             drawKirbyStandingWalking(x_coord, y_coord, standing_kirby_right_map);
@@ -614,7 +694,7 @@ void scrollScreen() {
                         }
                     } else if (gyro.currDirection == 2){
                         //move left
-                        x_coord -= 2;
+                        x_coord -= 3;
                         y_coord -= 1;
                         if (y_coord % 2 == 0) {
                             drawKirbyStandingWalking(x_coord, y_coord, standing_kirby_left_map);
@@ -627,34 +707,47 @@ void scrollScreen() {
                 }
             }
         } else {
-            if (x_coord > 0 && (x_coord + _KIRBYWIDTH) < _WIDTH) {
+            if (x_coord <= 0 || (x_coord + _KIRBYWIDTH) >= _WIDTH) {
+                if (gyro.currDirection == 1) {
+                    x_coord -= 3;
+                    y_coord += 3;
+                    drawKirbyDropping(x_coord, y_coord, dropping_kirby_right_map);
+                    previous_kirby = dropping_kirby_right_map;
+                    gyro.currDirection == 2;
+                } else {
+                    x_coord += 3;
+                    y_coord += 3;
+                    drawKirbyDropping(x_coord, y_coord, dropping_kirby_left_map);
+                    previous_kirby = dropping_kirby_left_map;
+                    gyro.currDirection == 1;
+                }
+            } else {
                 readGyro();
                 if (gyro.ax < -45000 && gyro.ax > -65000) {
-                    printf("Moving right \n");
-                    x_coord += 2;
+//                    printf("Moving right \n");
+                    x_coord += 3;
                     y_coord+=3;
                     drawKirbyDropping(x_coord, y_coord, dropping_kirby_right_map);
                     previous_kirby = dropping_kirby_right_map;
                     gyro.currDirection = 1;
-                    // } else if (gyro.gx - initgx <= -300) {
-                } else if (gyro.ax < -14000 && gyro.ax > -18000){
-                    printf("Moving left \n");
-                    x_coord -= 2;
+                } else if (gyro.ax < -14000 && gyro.ax > -34000){
+//                    printf("Moving left \n");
+                    x_coord -= 3;
                     y_coord+=3;
                     drawKirbyDropping(x_coord, y_coord, dropping_kirby_left_map);
                     previous_kirby = dropping_kirby_left_map;
                     gyro.currDirection = 2;
                 } else {
-                    printf("no movement\n");
+//                    printf("no movement\n");
                     if (gyro.currDirection == 1) {
                         // move right
-                        x_coord += 2;
+                        x_coord += 3;
                         y_coord+=3;
                         drawKirbyDropping(x_coord, y_coord, dropping_kirby_right_map);
                         previous_kirby = dropping_kirby_right_map;
                     } else if (gyro.currDirection == 2){
                         //move left
-                        x_coord -= 2;
+                        x_coord -= 3;
                         y_coord+=3;
                         drawKirbyDropping(x_coord, y_coord, dropping_kirby_left_map);
                         previous_kirby = dropping_kirby_left_map;
@@ -673,9 +766,7 @@ void scrollScreen() {
         gl_draw_string(5 + _COINWIDTH * 2 + 2, _HEIGHT - _COINHEIGHT - 3, printPoints, GL_RED);
         gl_swap_buffer();
         timer_delay_ms(10);
-//        direction = keyboard_read_next();
     }
-    gameOver();
 }
 
 void drawScoreBoard() {
@@ -684,63 +775,53 @@ void drawScoreBoard() {
 }
 
 int gameOver() {
-    char* strEnd = "Game Over!";
-    int lengthEnd = strlen(strEnd);
-    int x1 = _WIDTH / 2 - lengthEnd * gl_get_char_width() / 2;
-    int y1 = _HEIGHT / 4;
-//    char* strAgain = "Press 'A' to Play Again";
-//    int lengthAgain = strlen(strAgain);
-//    int x2 = _WIDTH / 2 - lengthAgain * gl_get_char_width() / 2;
-//    int y2 = _HEIGHT / 2;
-//    char* strExit = "Press 'B' to Exit";
-//    int lengthExit = strlen(strExit);
-//    int x3 = _WIDTH / 2 - lengthExit * gl_get_char_width() / 2;
-//    int y3 = _HEIGHT / 4 * 3;
-//
+    char* strAgain = "Swipe right to play again!";
+    int lengthAgain = strlen(strAgain);
+    int x2 = _WIDTH / 2 - lengthAgain * gl_get_char_width() / 2;
+    int y2 = _HEIGHT / 2;
+    char printPoints[5];
+
     gl_swap_buffer();
     gl_clear(GL_WHITE);
-    gl_draw_string(x1, y1, strEnd, _TEXTCOLOR);
-    drawKirbyDropping(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 8) * 3, dropping_kirby_right_map);
+    drawGameOver();
+    drawCoin(276, _HEIGHT / 8 * 5);
+    gl_draw_string(293, _HEIGHT / 8 * 5 + 2, "x", GL_RED);
+    snprintf(printPoints, 5, "%d", points);
+    gl_draw_string(309, _HEIGHT / 8 * 5 + 2, printPoints, GL_RED);
+    drawKirbyGhost(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 4) * 3, ghost_kirby_map);
+    gl_draw_string(x2, y2, strAgain, GL_RED);
+    gl_swap_buffer();
     timer_delay(2);
     
-    // loop until user presses button
-    for (int i = 0; i < 4; i++) {
-        gl_draw_string(x1, y1, strEnd, _TEXTCOLOR);
-        drawKirbyDropping(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 8) * 3, dropping_kirby_right_map);
-//        gl_draw_string(x2, y2, strAgain, _TEXTCOLOR);
-//        gl_draw_string(x3, y3, strExit, _TEXTCOLOR);
-        timer_delay(1);
-        gl_swap_buffer();
-        gl_clear(GL_WHITE);
-        
-        gl_draw_string(x1, y1, strEnd, GL_WHITE);
-        drawKirbyDropping(_WIDTH / 2 - _KIRBYWIDTH / 2, (_HEIGHT / 8) * 3, dropping_kirby_right_map);
-//        gl_draw_string(x2, y2, strAgain, GL_WHITE);
-//        gl_draw_string(x3, y3, strExit, GL_WHITE);
-        timer_delay(1);
-        gl_swap_buffer();
-        gl_clear(GL_WHITE);
+    while (true) {
+        readGyro();
+        if (gyro.ax < -45000 && gyro.ax > -65000) {
+            break;
+        }
     }
+    
+    points = 0;
     gl_swap_buffer();
-    return 0;
+    gl_clear(GL_WHITE);
+    return 1;
 }
 
 // main program
 void main(void) {
+    printf("char width = %d", gl_get_char_width());
     keyboard_init();
     interrupts_global_enable(); // everything fully initialized, now turn on interrupts
     init_window();
-//    char nextch = keyboard_read_next();
-//    printf("%d", (int)nextch);
-    // left is 167, right is 169
     welcome();
-//    int keepPlaying = 1;
+    int keepPlaying = 1;
     // keep playing as many times as user wants
-//    while (keepPlaying == 1) {
+    while (keepPlaying == 1) {
+        gl_swap_buffer();
+        gl_clear(GL_WHITE);
         generatePlatformsandCoins();
         scrollScreen();
-//        keepPlaying = gameOver();
-//    }
+        keepPlaying = gameOver();
+    }
     gl_swap_buffer();
     
 //    flipArray();
@@ -752,9 +833,9 @@ void flipArray() {
     int counter = 0;
     int start = 0;
     int end = _KIRBYWIDTH - 1;
-    unsigned map[1280];
-    memcpy(map, dropping_kirby_right_map, 1280);
-    while (end <= 1280) {
+    unsigned map[1440];
+    memcpy(map, standing_kirby_right_map, 1440);
+    while (end <= 1440) {
         // reverses each line
         while (start < end) {
             int temp = map[start];
@@ -768,7 +849,7 @@ void flipArray() {
         end += counter * 3;
         counter = 0;
     }
-    for (int i = 0; i < 1280; i++) {
+    for (int i = 0; i < 1440; i++) {
         printf("0x%x, ", map[i]);
     }
 }
