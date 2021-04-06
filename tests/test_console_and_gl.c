@@ -40,6 +40,8 @@
 
 typedef unsigned char uint8_t;
 
+//Proposed change: weirdly named file - why is it called test_console_and_gl.c? more than just a test
+
 // Write a byte (Data) in device (Address) at register (Register)
 void i2c_writeByte(unsigned Address, uint8_t Register, uint8_t Data)
 {
