@@ -195,6 +195,8 @@ void drawKirbyGhost (int x, int y, unsigned kirby_map[]) {
 //vwidth = 36
 //edwidth = 36
 //rwidth = 32
+
+// Proposed change: Create functions to draw entire letters, rather than the individual rectangles that make up these letters.
 void drawGameOver() {
     //G
     gl_draw_rect(140, 162, 4, 46, GL_BLACK);
@@ -418,6 +420,7 @@ void welcome() {
     gl_draw_string(x, y, str, _TEXTCOLOR);
     gl_swap_buffer();
     timer_delay(2);
+    // detect remote control sensor to start
     while (true) {
         readGyro();
         if (gyro.ax < -45000 && gyro.ax > -65000) {
@@ -556,6 +559,7 @@ int checkCoinIndex(int x, int y) {
 }
 
 // checks if Kirby collides with a coin
+// Proposed change: Can definitely be optimized
 int checkCoin(int x, int y, unsigned kirby_map[]) {
     int h;
     if (kirby_map == dropping_kirby_left_map || dropping_kirby_right_map) {
@@ -593,6 +597,7 @@ void scrollScreen() {
     platforms[0].draw = 1;
     platforms[1].draw = 1;
     
+    // Proposed change: Huge messy block of if else statements - can definitely break this down into more organized logic
     struct platform p;
     struct coin c;
     // loop to animate both platforms and Kirby
@@ -774,6 +779,7 @@ void drawScoreBoard() {
     gl_draw_rect(95, 145, 410, 210, GL_DARK_BROWN);
 }
 
+// Screen that displays game over information and points scored  
 int gameOver() {
     char* strAgain = "Swipe right to play again!";
     int lengthAgain = strlen(strAgain);
