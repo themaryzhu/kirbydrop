@@ -40,7 +40,7 @@
 // brick colors
 #define GL_DARK_BROWN 0x654321
 
-//Proposed change: find a significantly more efficient way to draw Kirby than manually creating color maps
+//Proposed change: find a significantly more efficient way to draw Kirby than manually creating color maps pixel by pixel
 
 unsigned standing_kirby_right_map[] = {
     GL_WHITE, GL_WHITE, GL_WHITE, GL_WHITE, GL_WHITE, GL_WHITE, GL_WHITE, GL_BLACK, GL_BLACK, GL_BLACK, GL_BLACK, GL_BLACK, GL_BLACK, GL_WHITE, GL_WHITE, GL_WHITE, GL_WHITE, GL_WHITE, GL_WHITE, GL_WHITE,
