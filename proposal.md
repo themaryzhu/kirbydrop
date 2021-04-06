@@ -1,3 +1,4 @@
+*Note: this was the bare bones initial proposal we came up with, which changed significantly through the course of the project's development
 
 Here is a suggested outline for your proposal. You don't need to follow this
 outline, but it may help you focus your project.
