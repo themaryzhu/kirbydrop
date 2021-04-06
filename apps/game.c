@@ -196,7 +196,7 @@ void drawKirbyGhost (int x, int y, unsigned kirby_map[]) {
 //edwidth = 36
 //rwidth = 32
 
-// Proposed change: Create functions to draw entire letters, rather than the individual rectangles that make up these letters.
+// Proposed change: Create functions to draw entire letters ising these gl_draw_rect functions. Place these functions in a different file dedicated to just that.
 void drawGameOver() {
     //G
     gl_draw_rect(140, 162, 4, 46, GL_BLACK);
